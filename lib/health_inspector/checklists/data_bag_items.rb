@@ -65,7 +65,7 @@ module HealthInspector
 
       def load_item_from_local(name)
         Yajl::Parser.parse( File.read("#{@context.repo_path}/data_bags/#{name}.json") )
-      rescue IOError, Errno::ENOENT
+      rescue IOError, Errno::ENOENT, Yajl::ParseError
         nil
       end
     end
