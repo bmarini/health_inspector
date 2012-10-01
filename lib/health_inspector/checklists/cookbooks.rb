@@ -81,15 +81,20 @@ module HealthInspector
 
       def cookbooks_in_repo
         @context.cookbook_path.
-          map { |path| Dir["#{path}/*"] }.
-          flatten.
-          select { |path| File.exists?("#{path}/metadata.rb") }.
-          inject({}) do |hsh, path|
+          map { |path| Dir["#{path}/**/metadata.{json,rb}"] }
+          .flatten
+          .map{ |path| File.dirname(path) }
+          .uniq
+          .inject({}) do |hsh, path|
 
-            name    = File.basename(path)
-            version = (`grep '^version' #{path}/metadata.rb`).split.last[1...-1]
+            if File.exists?("#{path}/metadata.json")
+              version = (`grep '"version"' #{path}/metadata.json`)
+            else 
+              version = (`grep '^version' #{path}/metadata.rb`)
+            end
 
-            hsh[name] = version
+            name      = File.basename(path)
+            hsh[name] = version.split.last.chomp(',').gsub(/"/,'')
             hsh
           end
       end
